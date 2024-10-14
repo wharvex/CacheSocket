@@ -15,5 +15,9 @@ find . -name "*.java" -print | xargs javac -d out
 
 # run
 java -cp out server.server 1025 tcp &
+server_pid=$!
 sleep 1
 java -cp out client.client localhost 1025 localhost 1026 tcp
+
+# kill background processes
+kill $server_pid
