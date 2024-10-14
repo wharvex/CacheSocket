@@ -1,9 +1,13 @@
 package client;
+
+import java.io.*;
+import java.net.*;
 import tcp.tcp_transport;
 import java.util.Scanner;
+import static utils.utils.tryParsePort;
 
 public class client {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         System.out.println("Hello from client!");
         tcp_transport x = new tcp_transport();
         x.announce();
@@ -11,9 +15,9 @@ public class client {
             throw new IllegalArgumentException("Run client with exactly 5 arguments.");
         }
         String serverIP = args[0];
-        String serverPort = args[1];
+        int serverPort = tryParsePort(args[1]);
         String cacheIP = args[2];
-        String cachePort = args[3];
+        int cachePort = tryParsePort(args[3]);
         String transportProtocol = args[4];
         System.out.println(serverIP + serverPort + cacheIP + cachePort + transportProtocol);
         Scanner s = new Scanner(System.in);
@@ -25,6 +29,22 @@ public class client {
             switch (cmdType) {
             case "get":
                 System.out.println("this is a get command");
+                String sentence;
+                String modifiedSentence;
+                BufferedReader inFromUser = new BufferedReader(
+                    new InputStreamReader(System.in));
+                Socket clientSocket = new Socket(serverIP, serverPort);
+                DataOutputStream outToServer = new DataOutputStream(
+                    clientSocket.getOutputStream());
+                BufferedReader inFromServer =
+                new BufferedReader(new InputStreamReader(
+                                       clientSocket.getInputStream()));
+                sentence = inFromUser.readLine();
+                outToServer.writeBytes(sentence + '\n');
+                modifiedSentence = inFromServer.readLine();
+                System.out.println("FROM SERVER: " +
+                                   modifiedSentence);
+                clientSocket.close();
                 break;
             case "put":
                 System.out.println("this is a put command");

@@ -14,6 +14,6 @@
 find . -name "*.java" -print | xargs javac -d out
 
 # run
-java -cp out server.server 3 4
+java -cp out server.server 1025 tcp &
 sleep 1
-java -cp out client.client 3 4 5 6 7
+java -cp out client.client localhost 1025 localhost 1026 tcp
