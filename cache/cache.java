@@ -10,8 +10,6 @@ import java.nio.charset.*;
 
 public class cache {
     public static void main(String[] args) {
-        System.out.println("Hello from cache!");
-
         // Validate/store command line args.
         // args: cache port, server ip, server port, protocol
         if (args.length != 4) {
@@ -23,9 +21,20 @@ public class cache {
         String transportProtocol = args[3];
 
         // Testing.
-        System.out.println("cache port: " + cachePort + "\nserver IP: " + serverIP + "\nserver port: " + serverPort + "\nprotocol: " + transportProtocol);
+        System.out.println("\ncache says: cache port: " + cachePort);
+        System.out.println("cache says: server IP: " + serverIP);
+        System.out.println("cache says: server port: " + serverPort);
+        System.out.println("cache says: protocol: " + transportProtocol + "\n");
 
-        while(true) {}
+        ServerSocket welcomeSocket = new ServerSocket(cachePort);
+        while(true) {
+            Socket connectionSocket = welcomeSocket.accept();
+            BufferedReader fromClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
+            DataOutputStream outToClient = new DataOutputStream(connectionSocket.getOutputStream());
+            clientSentence = inFromClient.readLine();
+            capitalizedSentence = clientSentence.toUpperCase() + '\n';
+            outToClient.writeBytes(capitalizedSentence);
+        }
 
         // System.out.println(port + transportProtocol);
         // String clientSentence;

@@ -11,11 +11,11 @@ import java.nio.charset.*;
 public class client {
     public static void main(String[] args) throws Exception {
         // Testing.
-        System.out.println("Hello from client!");
         tcp_transport x = new tcp_transport();
         x.announce();
 
         // Validate/store command line args.
+        // args: server IP, server port, cache IP, cache port, protocol
         if (args.length != 5) {
             throw new IllegalArgumentException("Run client with exactly 5 arguments.");
         }
@@ -26,7 +26,11 @@ public class client {
         String transportProtocol = args[4];
 
         // Testing.
-        System.out.println(serverIP + serverPort + cacheIP + cachePort + transportProtocol);
+        System.out.println("\nclient says: server IP: " + serverIP);
+        System.out.println("client says: server port: " + serverPort);
+        System.out.println("client says: cache port: " + cachePort);
+        System.out.println("client says: cache IP: " + cacheIP);
+        System.out.println("client says: protocol: " + transportProtocol + "\n");
 
         // Accept/process user commands.
         Scanner s = new Scanner(System.in);
