@@ -43,12 +43,14 @@ public class client {
             String splitLine[] = currentLine.split(" ", 2);
             String cmdType = splitLine[0];
 
-            // TODO: handle this better
+            // Get second word; validate.
             String cmdArg = splitLine.length > 1 ? splitLine[1] : "";
+            if (cmdArg.isEmpty() && !cmdType.toLowerCase().equals("quit"))
+                throw new IllegalArgumentException("Bad user command");
 
             // Proceed according to the command type.
             Path path;
-            switch (cmdType) {
+            switch (cmdType.toLowerCase()) {
             case "get":
                 // Announce operation.
                 System.out.println("GET file: " + cmdArg);
@@ -57,7 +59,7 @@ public class client {
                 Socket clientSocket = new Socket(cacheIP, cachePort);
                 DataOutputStream toCache = new DataOutputStream(clientSocket.getOutputStream());
                 BufferedReader fromCache = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                path = FileSystems.getDefault().getPath("client_fl", splitLine[1]);
+                path = FileSystems.getDefault().getPath("client_fl", cmdArg);
                 BufferedWriter toFile = Files.newBufferedWriter(path, StandardCharsets.UTF_8);
 
                 // Send line to Cache with file name to get.
@@ -69,7 +71,8 @@ public class client {
 
                 // Receive the file and write it out.
                 // https://stackoverflow.com/a/17623638
-                String l;
+                String l = fromCache.readLine();
+                System.out.println("l: " + l);
                 while ((l = fromCache.readLine()) != null) {
                     toFile.write(l);
                     toFile.newLine();
@@ -80,7 +83,7 @@ public class client {
                 break;
             case "put":
                 System.out.println("put");
-                path = FileSystems.getDefault().getPath("client_fl", splitLine[1]);
+                path = FileSystems.getDefault().getPath("client_fl", cmdArg);
                 BufferedReader reader = Files.newBufferedReader(path,
                                         StandardCharsets.UTF_8);
                 break;
