@@ -1,7 +1,6 @@
 package cache;
 
-import static utils.utils.newServerBehaviorCache;
-import static utils.utils.tryParsePort;
+import static utils.utils.*;
 
 public class cache {
     public static void main(String[] args) throws Exception {
@@ -14,7 +13,8 @@ public class cache {
         String serverIP = args[1];
         int serverPort = tryParsePort(args[2]);
         String transportProtocolString = args[3];
+        validateProtocolArg(transportProtocolString);
 
-        newServerBehaviorCache(serverIP, cachePort, serverPort);
+        newServerBehaviorCache(serverIP, cachePort, serverPort, transportProtocolString.equalsIgnoreCase("snw"));
     }
 }

@@ -21,6 +21,7 @@ public class client {
         String cacheIP = args[2];
         int cachePort = tryParsePort(args[3]);
         String transportProtocolString = args[4];
+        validateProtocolArg(transportProtocolString);
 
 
         // Accept/process user commands.
@@ -45,7 +46,7 @@ public class client {
             // Proceed according to the command type.
             switch (cmd.cmdType.toLowerCase()) {
                 case "get":
-                    newClientBehaviorGet(cacheIP, cachePort, "client_fl", cmd);
+                    newClientBehaviorGet(cacheIP, cachePort, "client_fl", cmd, transportProtocolString.equalsIgnoreCase("snw"));
                     break;
                 case "put":
                     clientBehaviorPut(serverIP, serverPort, cmd);

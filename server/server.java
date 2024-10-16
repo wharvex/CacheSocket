@@ -1,7 +1,6 @@
 package server;
 
-import static utils.utils.serverBehaviorServer;
-import static utils.utils.tryParsePort;
+import static utils.utils.*;
 
 public class server {
     public static void main(String[] args) throws Exception {
@@ -11,6 +10,7 @@ public class server {
         String portStr = args[0];
         int port = tryParsePort(portStr);
         String transportProtocol = args[1];
-        serverBehaviorServer(port);
+        validateProtocolArg(transportProtocol);
+        serverBehaviorServer(port, transportProtocol.equalsIgnoreCase("snw"));
     }
 }

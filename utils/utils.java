@@ -1,6 +1,7 @@
 package utils;
 
 import interfaces.IProtocol;
+import snw.snw_transport;
 import tcp.tcp_transport;
 
 import java.io.*;
@@ -112,7 +113,7 @@ public class utils {
         }
     }
 
-    public static void newClientBehaviorGet(String ip, int port, String outFilePathNewBase, Command cmd) throws Exception {
+    public static void newClientBehaviorGet(String ip, int port, String outFilePathNewBase, Command cmd, boolean isSNW) throws Exception {
         // "Try with resources" -- Objects created in the parens get "disposed" after control flow is done with the
         // curly-brace block.
         try (
@@ -128,7 +129,7 @@ public class utils {
             Path outFilePath = switchPathBase(cmdArgPath, outFilePathNewBase);
 
             // Get file.
-            IProtocol transportProtocol = new tcp_transport(pwOutToSock, brInFromSock);
+            IProtocol transportProtocol = isSNW ? new snw_transport() : new tcp_transport(pwOutToSock, brInFromSock);
             transportProtocol.receiveFile(outFilePath);
 
             // Get feedback.
@@ -161,7 +162,7 @@ public class utils {
         }
     }
 
-    public static void newServerBehaviorCache(String serverIp, int cachePort, int serverPort) throws Exception {
+    public static void newServerBehaviorCache(String serverIp, int cachePort, int serverPort, boolean isSNW) throws Exception {
         try (
                 ServerSocket listenSocket = new ServerSocket(cachePort)
         ) {
@@ -186,14 +187,14 @@ public class utils {
                         var newArg = switchPathBase(cmdArgPath, "server_fl").toString();
                         debugWriteToFile("new arg: " + newArg);
                         var newCmd = new Command(cmd, newArg);
-                        newClientBehaviorGet(serverIp, serverPort, "cache_fl", newCmd);
+                        newClientBehaviorGet(serverIp, serverPort, "cache_fl", newCmd, isSNW);
                         fileOrigin = "server";
                     } else {
                         fileOrigin = "cache";
                     }
 
                     // Send file.
-                    IProtocol transportProtocol = new tcp_transport(outToSocket, inFromSocket);
+                    IProtocol transportProtocol = isSNW ? new snw_transport() : new tcp_transport(outToSocket, inFromSocket);
                     transportProtocol.sendFile(cmdArgPath);
 
                     // Send feedback.
@@ -204,7 +205,7 @@ public class utils {
         }
     }
 
-    public static void serverBehaviorServer(int serverPort) throws Exception {
+    public static void serverBehaviorServer(int serverPort, boolean isSNW) throws Exception {
         try (
                 ServerSocket listenSocket = new ServerSocket(serverPort)
         ) {
@@ -222,7 +223,7 @@ public class utils {
                     Path cmdArgPath = convertStringToPath(cmd.cmdArg);
 
                     // Create transport protocol and proceed according to command type.
-                    IProtocol transportProtocol = new tcp_transport(outToSocket, inFromSocket);
+                    IProtocol transportProtocol = isSNW ? new snw_transport() : new tcp_transport(outToSocket, inFromSocket);
                     switch (cmd.cmdType) {
                         case "get":
                             File f = new File(cmd.cmdArg);
@@ -248,6 +249,12 @@ public class utils {
                     }
                 }
             }
+        }
+    }
+
+    public static void validateProtocolArg(String protocolArg) {
+        if (!(protocolArg.equalsIgnoreCase("tcp") || protocolArg.equalsIgnoreCase("snw"))) {
+            throw new IllegalArgumentException("Invalid protocol arg");
         }
     }
 }
