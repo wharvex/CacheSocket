@@ -1,7 +1,13 @@
 package snw;
 
 import interfaces.IProtocol;
+import utils.SNWFile;
 
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketTimeoutException;
 import java.nio.file.Path;
 
 /**
@@ -27,7 +33,7 @@ import java.nio.file.Path;
  * <p>
  * The reliable data transfer should function identically for both get and put.
  * <p>
- * Your reliable protocol will function as follows:
+ * *******************YOUR RELIABLE PROTOCOL WILL FUNCTION AS FOLLOWS****************************
  * <p>
  * FIRST, the sender calculates the amount of data to be transmitted and sends a
  * “length” message to the receiver, letting them know how many bytes of data to expect.
@@ -68,16 +74,73 @@ import java.nio.file.Path;
  * transmission terminated prematurely.”.
  */
 public class snw_transport implements IProtocol {
-    public snw_transport() {
+    InetAddress ip;
+    int port;
+
+    public snw_transport(String ip, int port) throws Exception {
+        this.ip = InetAddress.getByName(ip);
+        this.port = port;
     }
 
     @Override
     public void sendFile(Path path) throws Exception {
-        System.out.println("snw send");
+        try (DatagramSocket ds = new DatagramSocket(port)) {
+            // Set timeout length to 1 second.
+            ds.setSoTimeout(1000);
+
+            // Setup.
+            SNWFile snwFile = new SNWFile(path.toString());
+
+            // Send length message
+            String lenMsg = "LEN:" + snwFile.fileLenInBytes;
+            byte[] buf = lenMsg.getBytes();
+            DatagramPacket packet = new DatagramPacket(buf, buf.length, ip, port);
+            ds.send(packet);
+
+            // Receive acknowledgement.
+            buf = getNewBuf();
+            packet = new DatagramPacket(buf, buf.length);
+            tryReceiveMessage(packet, ds, "Did not receive ACK. Terminating.");
+            System.out.println(new String(packet.getData()));
+        }
     }
 
     @Override
     public void receiveFile(Path path) throws Exception {
-        System.out.println("snw receive");
+        try (DatagramSocket ds = new DatagramSocket(port)) {
+            // Set timeout length to 1 second.
+            ds.setSoTimeout(1000);
+
+            // Create bytes buffer.
+            byte[] buf = new byte[1000];
+
+            // Receive length message.
+            DatagramPacket packet = new DatagramPacket(buf, buf.length);
+            tryReceiveMessage(packet, ds, "Did not receive data. Terminating.");
+            System.out.println(new String(packet.getData()));
+
+            // Send acknowledgement.
+            sendAcknowledgement(ds);
+        }
+    }
+
+    private void sendAcknowledgement(DatagramSocket socket) throws Exception {
+        String ackMsg = "ACK";
+        byte[] ackMsgBytes = ackMsg.getBytes();
+        DatagramPacket p = new DatagramPacket(ackMsgBytes, ackMsgBytes.length, ip, port);
+        socket.send(p);
+    }
+
+    private void tryReceiveMessage(DatagramPacket p, DatagramSocket s, String errMsg) throws IOException {
+        try {
+            s.receive(p);
+        } catch (SocketTimeoutException ste) {
+            System.out.println(errMsg);
+            System.exit(-1);
+        }
+    }
+
+    private byte[] getNewBuf() {
+        return new byte[1000];
     }
 }

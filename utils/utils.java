@@ -129,7 +129,7 @@ public class utils {
             Path outFilePath = switchPathBase(cmdArgPath, outFilePathNewBase);
 
             // Get file.
-            IProtocol transportProtocol = isSNW ? new snw_transport() : new tcp_transport(pwOutToSock, brInFromSock);
+            IProtocol transportProtocol = isSNW ? new snw_transport(ip, port) : new tcp_transport(pwOutToSock, brInFromSock);
             transportProtocol.receiveFile(outFilePath);
 
             // Get feedback.
@@ -194,7 +194,8 @@ public class utils {
                     }
 
                     // Send file.
-                    IProtocol transportProtocol = isSNW ? new snw_transport() : new tcp_transport(outToSocket, inFromSocket);
+                    // TODO: Add cache IP to newServerBehaviorCache's params.
+                    IProtocol transportProtocol = isSNW ? new snw_transport("localhost", cachePort) : new tcp_transport(outToSocket, inFromSocket);
                     transportProtocol.sendFile(cmdArgPath);
 
                     // Send feedback.
@@ -223,7 +224,8 @@ public class utils {
                     Path cmdArgPath = convertStringToPath(cmd.cmdArg);
 
                     // Create transport protocol and proceed according to command type.
-                    IProtocol transportProtocol = isSNW ? new snw_transport() : new tcp_transport(outToSocket, inFromSocket);
+                    // TODO: Figure out how to get server's ip address here.
+                    IProtocol transportProtocol = isSNW ? new snw_transport("localhost", serverPort) : new tcp_transport(outToSocket, inFromSocket);
                     switch (cmd.cmdType) {
                         case "get":
                             File f = new File(cmd.cmdArg);
