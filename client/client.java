@@ -2,10 +2,6 @@ package client;
 
 import utils.Command;
 
-import java.io.BufferedReader;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Scanner;
 
@@ -47,23 +43,18 @@ public class client {
                 System.out.println("Awaiting server response.");
 
             // Proceed according to the command type.
-            Path path;
             switch (cmd.cmdType.toLowerCase()) {
                 case "get":
                     newClientBehaviorGet(cacheIP, cachePort, "client_fl", cmd);
                     break;
                 case "put":
-                    System.out.println("Awaiting server response.");
-                    System.out.println("put");
-                    path = FileSystems.getDefault().getPath("client_fl", cmd.cmdArg);
-                    BufferedReader reader = Files.newBufferedReader(path,
-                            StandardCharsets.UTF_8);
+                    clientBehaviorPut(serverIP, serverPort, cmd);
                     break;
                 case "quit":
                     System.out.println("Exiting program!");
                     break;
                 default:
-                    System.out.println("unrecognized command type");
+                    System.out.println("Impossible! Command constructor should have validated command.");
                     break;
             }
         } while (!currentLine.equals("quit"));

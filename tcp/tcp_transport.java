@@ -15,11 +15,8 @@ public class tcp_transport implements IProtocol {
     PrintWriter pw;
     BufferedReader br;
 
-    public tcp_transport(PrintWriter pw) {
+    public tcp_transport(PrintWriter pw, BufferedReader br) {
         this.pw = pw;
-    }
-
-    public tcp_transport(BufferedReader br) {
         this.br = br;
     }
 
@@ -38,9 +35,9 @@ public class tcp_transport implements IProtocol {
         int i = 0;
         String ln;
         while (true) {
-            debugWriteToFile("client-behaving party about to read from sock br " + (++i));
+            debugWriteToFile("tcp_transport about to read line from sock br " + (++i));
             ln = br.readLine();
-            debugWriteToFile("client-behaving party receives line: " + ln);
+            debugWriteToFile("tcp_transport read line: " + ln);
             if (ln.equals("file over")) {
                 debugWriteToFile("file is over...");
                 break;

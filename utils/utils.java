@@ -128,8 +128,30 @@ public class utils {
             Path outFilePath = switchPathBase(cmdArgPath, outFilePathNewBase);
 
             // Get file.
-            IProtocol transportProtocol = new tcp_transport(brInFromSock);
+            IProtocol transportProtocol = new tcp_transport(pwOutToSock, brInFromSock);
             transportProtocol.receiveFile(outFilePath);
+
+            // Get feedback.
+            debugWriteToFile("client-behaving party about to read feedback from sock br");
+            String feedback = brInFromSock.readLine();
+            System.out.println(feedback);
+            debugWriteToFile("client-behaving party read feedback line: " + feedback);
+        }
+    }
+
+    public static void clientBehaviorPut(String serverIp, int serverPort, Command cmd) throws Exception {
+        try (
+                Socket sock = new Socket(serverIp, serverPort);
+                PrintWriter pwOutToSock = new PrintWriter(sock.getOutputStream(), true);
+                BufferedReader brInFromSock = new BufferedReader(new InputStreamReader(sock.getInputStream()))
+        ) {
+            // Send command.
+            pwOutToSock.println(cmd.cmdLine);
+
+            // Get path and send file.
+            Path cmdArgPath = convertStringToPath(cmd.cmdArg);
+            IProtocol transportProtocol = new tcp_transport(pwOutToSock, brInFromSock);
+            transportProtocol.sendFile(cmdArgPath);
 
             // Get feedback.
             debugWriteToFile("client-behaving party about to read feedback from sock br");
@@ -171,7 +193,7 @@ public class utils {
                     }
 
                     // Send file.
-                    IProtocol transportProtocol = new tcp_transport(outToSocket);
+                    IProtocol transportProtocol = new tcp_transport(outToSocket, inFromSocket);
                     transportProtocol.sendFile(cmdArgPath);
 
                     // Send feedback.
@@ -200,7 +222,7 @@ public class utils {
                     Path cmdArgPath = convertStringToPath(cmd.cmdArg);
 
                     // Create transport protocol and proceed according to command type.
-                    IProtocol transportProtocol = new tcp_transport(outToSocket);
+                    IProtocol transportProtocol = new tcp_transport(outToSocket, inFromSocket);
                     switch (cmd.cmdType) {
                         case "get":
                             File f = new File(cmd.cmdArg);
@@ -209,21 +231,19 @@ public class utils {
                                 outToSocket.println("Server response: File not found.");
                             } else {
                                 transportProtocol.sendFile(cmdArgPath);
-                                debugWriteToFile("cache printing feedback to client-cache socket");
-                                outToSocket.println("blah");
+                                debugWriteToFile("server printing blank feedback to server-cache socket");
+                                outToSocket.println("");
                             }
                             break;
                         case "put":
+                            var newArg = switchPathBase(cmdArgPath, "server_fl").toString();
+                            debugWriteToFile("server created new cmd arg: " + newArg);
+                            var newCmdArgPath = convertStringToPath(newArg);
+                            transportProtocol.receiveFile(newCmdArgPath);
                             break;
                         default:
                             throw new Exception("Impossible!");
                     }
-//                    try (
-//                            Stream<String> stream = Files.lines(cmdArgPath)
-//                    ) {
-//                        stream.forEach(outToSocket::println);
-//                        outToSocket.println("file over");
-//                    }
                 }
             }
         }
