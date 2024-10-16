@@ -152,6 +152,7 @@ public class utils {
             // Get path and send file.
             Path cmdArgPath = convertStringToPath(cmd.cmdArg);
             IProtocol transportProtocol = new tcp_transport(pwOutToSock, brInFromSock);
+            debugWriteToFile("clientBehaviorPut sending file");
             transportProtocol.sendFile(cmdArgPath);
 
             // Get feedback.
@@ -196,6 +197,7 @@ public class utils {
                     // Send file.
                     // TODO: Add cache IP to newServerBehaviorCache's params.
                     IProtocol transportProtocol = isSNW ? new snw_transport("localhost", cachePort) : new tcp_transport(outToSocket, inFromSocket);
+                    debugWriteToFile("serverBehaviorCache sending file on port " + cachePort);
                     transportProtocol.sendFile(cmdArgPath);
 
                     // Send feedback.
@@ -233,6 +235,7 @@ public class utils {
                                 debugWriteToFile("server didn't find the file");
                                 outToSocket.println("Server response: File not found.");
                             } else {
+                                debugWriteToFile("serverBehaviorServer sending file on port " + serverPort);
                                 transportProtocol.sendFile(cmdArgPath);
                                 debugWriteToFile("server printing blank feedback to server-cache socket because cache prints the actual feedback");
                                 outToSocket.println("");
@@ -277,6 +280,23 @@ public class utils {
                 debugWriteToFile("Something went wrong with `getStringOfFile`");
             }
             return sb.toString();
+        }
+    }
+
+    public static Command getCommand(int cachePort) throws Exception {
+
+        try (
+                ServerSocket listenSocket = new ServerSocket(cachePort)
+        ) {
+            try (
+                    Socket connectionSocket = listenSocket.accept();
+                    BufferedReader inFromSocket = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()))
+            ) {
+                debugWriteToFile("about to read from socket");
+                String cmdLine = inFromSocket.readLine();
+                debugWriteToFile("cache received line from client-cache socket:\n" + cmdLine);
+                return new Command(cmdLine);
+            }
         }
     }
 }

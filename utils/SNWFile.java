@@ -1,5 +1,6 @@
 package utils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static utils.utils.getStringOfFile;
@@ -14,6 +15,7 @@ public class SNWFile {
         fileString = getStringOfFile(filePath);
         fileByteArr = fileString.getBytes();
         fileLenInBytes = fileByteArr.length;
+        byteChunks = new ArrayList<>();
         byte[] buf = new byte[1000];
         int j = 0;
         for (int i = 0; i < fileLenInBytes; i++) {

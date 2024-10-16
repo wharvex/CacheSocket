@@ -9,6 +9,9 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketTimeoutException;
 import java.nio.file.Path;
+import java.util.Random;
+
+import static utils.utils.debugWriteToFile;
 
 /**
  * Stop-and-wait reliability over UDP:
@@ -79,11 +82,15 @@ public class snw_transport implements IProtocol {
 
     public snw_transport(String ip, int port) throws Exception {
         this.ip = InetAddress.getByName(ip);
-        this.port = port;
+        Random r = new Random();
+        int low = 20005;
+        int high = 24000;
+        this.port = r.nextInt(high - low) + low;
     }
 
     @Override
     public void sendFile(Path path) throws Exception {
+        debugWriteToFile("Creating DatagramSocket on port " + port);
         try (DatagramSocket ds = new DatagramSocket(port)) {
             // Set timeout length to 1 second.
             ds.setSoTimeout(1000);
