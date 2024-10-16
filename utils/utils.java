@@ -123,22 +123,13 @@ public class utils {
             // Send command.
             pwOutToSock.println(cmd.cmdLine);
 
+            // Switch path.
             Path cmdArgPath = convertStringToPath(cmd.cmdArg);
             Path outFilePath = switchPathBase(cmdArgPath, outFilePathNewBase);
-            IProtocol transportProtocol = new tcp_transport(brInFromSock);
-            transportProtocol.receiveFile(outFilePath);
 
             // Get file.
-//            while (true) {
-//                debugWriteToFile("client-behaving party about to read from sock br " + (++i));
-//                ln = brInFromSock.readLine();
-//                debugWriteToFile("client-behaving party receives line: " + ln);
-//                if (ln.equals("file over")) {
-//                    debugWriteToFile("file is over...");
-//                    break;
-//                }
-//                writeToFile(ln, outFilePath);
-//            }
+            IProtocol transportProtocol = new tcp_transport(brInFromSock);
+            transportProtocol.receiveFile(outFilePath);
 
             // Get feedback.
             debugWriteToFile("client-behaving party about to read feedback from sock br");
@@ -171,6 +162,7 @@ public class utils {
                     if (!f.exists()) {
                         debugWriteToFile("cache getting file from server");
                         var newArg = switchPathBase(cmdArgPath, "server_fl").toString();
+                        debugWriteToFile("new arg: " + newArg);
                         var newCmd = new Command(cmd, newArg);
                         newClientBehaviorGet(serverIp, serverPort, "cache_fl", newCmd);
                         fileOrigin = "server";

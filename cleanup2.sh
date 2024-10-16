@@ -1,7 +1,7 @@
 #!/bin/zsh
 
-rm /home/tim/projects/CacheSocket/client_fl/File2.txt
+rm ./client_fl/File2.txt
 rm /tmp/networking_debug_output.txt
-rm /home/tim/projects/CacheSocket/cache_fl/File2.txt
-rm /home/tim/projects/CacheSocket/server_fl/File2.txt
-cp /home/tim/projects/CacheSocket/static_fl/File2.txt /home/tim/projects/CacheSocket/server_fl/
+rm ./cache_fl/File2.txt
+rm ./server_fl/File2.txt
+cp ./static_fl/File2.txt ./server_fl/

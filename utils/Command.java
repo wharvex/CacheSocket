@@ -22,8 +22,8 @@ public class Command {
 
     public Command(Command cmd, String newArg) {
         this.cmdType = cmd.cmdType;
-        this.cmdArg = cmd.cmdArg;
-        this.cmdLine = cmd.cmdType + " " + cmd.cmdArg;
+        this.cmdArg = newArg;
+        this.cmdLine = cmd.cmdType + " " + newArg;
         this.isValid = true;
     }
 }
