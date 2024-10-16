@@ -257,4 +257,24 @@ public class utils {
             throw new IllegalArgumentException("Invalid protocol arg");
         }
     }
+
+    public static String getStringOfFile(String filePath) throws Exception {
+        // https://stackoverflow.com/a/4716623/16458003
+        int i = 0;
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            StringBuilder sb = new StringBuilder();
+            String line = br.readLine();
+
+            while (line != null) {
+                i++;
+                sb.append(line);
+                sb.append(System.lineSeparator());
+                line = br.readLine();
+            }
+            if (i == 0) {
+                debugWriteToFile("Something went wrong with `getStringOfFile`");
+            }
+            return sb.toString();
+        }
+    }
 }
