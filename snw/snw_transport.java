@@ -82,7 +82,7 @@ public class snw_transport implements IProtocol {
     int port;
 
     public snw_transport(String ip, int port) throws Exception {
-        this.ip = InetAddress.getByName(ip);
+        this.ip = InetAddress.getLocalHost();
         // Random r = new Random();
         // int low = 20005;
         // int high = 24000;
@@ -157,7 +157,7 @@ public class snw_transport implements IProtocol {
             tryReceiveMessage(packet, ds, "Did not receive data. Terminating.");
             byte[] packetData = cleanPacketData(packet);
             String lenString = new String(packetData);
-            System.out.println(lenString);
+            // System.out.println(lenString);
             debugWriteToFile(Arrays.toString(packetData));
 
             // Store length; init StringBuilder.

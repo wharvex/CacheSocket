@@ -2,7 +2,6 @@ package client;
 
 import utils.Command;
 
-import java.nio.file.Path;
 import java.util.Scanner;
 
 import static utils.utils.*;
@@ -10,7 +9,9 @@ import static utils.utils.*;
 public class client {
     public static void main(String[] args) throws Exception {
         debugWriteToFile("Client starting");
-        System.out.println(Path.of(System.getProperty("java.io.tmpdir"), "networking_debug_output.txt"));
+        // Uncomment this line if you want to see where the debug output goes.
+        // System.out.println(Path.of(System.getProperty("java.io.tmpdir"), "networking_debug_output.txt"));
+
         // Validate/store command line args.
         // args: server IP, server port, cache IP, cache port, protocol
         if (args.length != 5) {

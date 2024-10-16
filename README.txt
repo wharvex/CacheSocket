@@ -1,3 +1,14 @@
+Assuming you have the following test files:
+
+client_fl/
+    File4.txt
+cache_fl/
+    File1.txt
+server_fl/
+    File1.txt 
+    File2.txt 
+    File3.txt
+
 First, compile the program with the following command:
 
 find . -name "*.java" -print | xargs javac -d out
@@ -26,9 +37,4 @@ java -cp out cache.cache 20001 localhost 20000 snw &
 sleep 1
 java -cp out client.client localhost 20000 localhost 20001 snw
 
-Then, enter the same get/put commands when prompted. These do not work for some reason.
-
-When I put the two UDP sockets on the same port, I get an error saying the address is already in use.
-When I put the two UDP sockets on different ports, the transmission times out.
-
-I wish I understood what the issue is.
+Then, enter the same get/put commands when prompted.
