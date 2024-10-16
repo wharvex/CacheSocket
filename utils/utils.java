@@ -231,7 +231,7 @@ public class utils {
                                 outToSocket.println("Server response: File not found.");
                             } else {
                                 transportProtocol.sendFile(cmdArgPath);
-                                debugWriteToFile("server printing blank feedback to server-cache socket");
+                                debugWriteToFile("server printing blank feedback to server-cache socket because cache prints the actual feedback");
                                 outToSocket.println("");
                             }
                             break;
@@ -240,6 +240,8 @@ public class utils {
                             debugWriteToFile("server created new cmd arg: " + newArg);
                             var newCmdArgPath = convertStringToPath(newArg);
                             transportProtocol.receiveFile(newCmdArgPath);
+                            debugWriteToFile("server printing feedback to server-cache socket");
+                            outToSocket.println("File successfully uploaded.");
                             break;
                         default:
                             throw new Exception("Impossible!");
