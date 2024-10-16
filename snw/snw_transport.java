@@ -98,17 +98,35 @@ public class snw_transport implements IProtocol {
             // Setup.
             SNWFile snwFile = new SNWFile(path.toString());
 
-            // Send length message
-            String lenMsg = "LEN:" + snwFile.fileLenInBytes;
+            // Send length message.
+            // TODO: Make the length message bytes.
+            String lenMsg = "LEN:" + snwFile.byteChunks.size();
             byte[] buf = lenMsg.getBytes();
             DatagramPacket packet = new DatagramPacket(buf, buf.length, ip, port);
             ds.send(packet);
 
-            // Receive acknowledgement.
-            buf = getNewBuf();
-            packet = new DatagramPacket(buf, buf.length);
-            tryReceiveMessage(packet, ds, "Did not receive ACK. Terminating.");
-            System.out.println(new String(packet.getData()));
+
+            // Send file.
+            snwFile.byteChunks.forEach(c -> {
+                // Send data.
+                DatagramPacket p = new DatagramPacket(c, c.length, ip, port);
+                try {
+                    ds.send(p);
+                } catch (Exception e) {
+                    System.out.println("Send failed.");
+                    System.exit(-1);
+                }
+
+                // Receive acknowledgement.
+                byte[] newBuf = getNewBuf();
+                p = new DatagramPacket(newBuf, newBuf.length);
+                try {
+                    tryReceiveMessage(p, ds, "Did not receive ACK. Terminating.");
+                } catch (Exception e) {
+                    System.out.println("Receive failed.");
+                    System.exit(-1);
+                }
+            });
         }
     }
 
@@ -124,16 +142,35 @@ public class snw_transport implements IProtocol {
             // Receive length message.
             DatagramPacket packet = new DatagramPacket(buf, buf.length);
             tryReceiveMessage(packet, ds, "Did not receive data. Terminating.");
-            System.out.println(new String(packet.getData()));
+            String lenString = new String(packet.getData());
+            System.out.println(lenString);
 
-            // Send acknowledgement.
-            sendAcknowledgement(ds);
+            // Store length; init StringBuilder.
+            // TODO: Convert len to bytes.
+            int len = Integer.parseInt(lenString.split(":")[1]);
+            StringBuilder sb = new StringBuilder();
+            String dataString;
+
+            for (int i = 0; i < len; i++) {
+                // Get data.
+                buf = getNewBuf();
+                packet = new DatagramPacket(buf, buf.length);
+                tryReceiveMessage(packet, ds, "Data transmission terminated prematurely.");
+
+                // Store data.
+                dataString = new String(packet.getData());
+                sb.append(dataString);
+                sb.append(System.lineSeparator());
+
+                // Send acknowledgement.
+                sendString(ds, "ACK");
+            }
+            sendString(ds, "FIN");
         }
     }
 
-    private void sendAcknowledgement(DatagramSocket socket) throws Exception {
-        String ackMsg = "ACK";
-        byte[] ackMsgBytes = ackMsg.getBytes();
+    private void sendString(DatagramSocket socket, String s) throws Exception {
+        byte[] ackMsgBytes = s.getBytes();
         DatagramPacket p = new DatagramPacket(ackMsgBytes, ackMsgBytes.length, ip, port);
         socket.send(p);
     }
