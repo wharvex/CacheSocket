@@ -9,9 +9,9 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketTimeoutException;
 import java.nio.file.Path;
-import java.util.Random;
+import java.util.Arrays;
 
-import static utils.utils.debugWriteToFile;
+import static utils.utils.*;
 
 /**
  * Stop-and-wait reliability over UDP:
@@ -77,20 +77,22 @@ import static utils.utils.debugWriteToFile;
  * transmission terminated prematurely.”.
  */
 public class snw_transport implements IProtocol {
+    int connectionPort;
     InetAddress ip;
     int port;
 
     public snw_transport(String ip, int port) throws Exception {
         this.ip = InetAddress.getByName(ip);
-        Random r = new Random();
-        int low = 20005;
-        int high = 24000;
-        this.port = r.nextInt(high - low) + low;
+        // Random r = new Random();
+        // int low = 20005;
+        // int high = 24000;
+        // this.port = r.nextInt(high - low) + low;
+        this.port = port;
     }
 
     @Override
     public void sendFile(Path path) throws Exception {
-        debugWriteToFile("Creating DatagramSocket on port " + port);
+        debugWriteToFile("Creating send DatagramSocket on port " + port);
         try (DatagramSocket ds = new DatagramSocket(port)) {
             // Set timeout length to 1 second.
             ds.setSoTimeout(1000);
@@ -102,14 +104,15 @@ public class snw_transport implements IProtocol {
             // TODO: Make the length message bytes.
             String lenMsg = "LEN:" + snwFile.byteChunks.size();
             byte[] buf = lenMsg.getBytes();
-            DatagramPacket packet = new DatagramPacket(buf, buf.length, ip, port);
+            DatagramPacket packet = new DatagramPacket(buf, buf.length, ip, connectionPort);
+            debugWriteToFile("about to send len msg on port " + port);
             ds.send(packet);
 
 
             // Send file.
             snwFile.byteChunks.forEach(c -> {
                 // Send data.
-                DatagramPacket p = new DatagramPacket(c, c.length, ip, port);
+                DatagramPacket p = new DatagramPacket(c, c.length, ip, connectionPort);
                 try {
                     ds.send(p);
                 } catch (Exception e) {
@@ -127,11 +130,20 @@ public class snw_transport implements IProtocol {
                     System.exit(-1);
                 }
             });
+
+            // Receive FIN message.
+            buf = getNewBuf();
+            packet = new DatagramPacket(buf, buf.length);
+            tryReceiveMessage(packet, ds, "Did not receive FIN. Terminating.");
+
+            // Close connection.
+            ds.disconnect();
         }
     }
 
     @Override
     public void receiveFile(Path path) throws Exception {
+        debugWriteToFile("Creating receive DatagramSocket on port " + port);
         try (DatagramSocket ds = new DatagramSocket(port)) {
             // Set timeout length to 1 second.
             ds.setSoTimeout(1000);
@@ -141,13 +153,18 @@ public class snw_transport implements IProtocol {
 
             // Receive length message.
             DatagramPacket packet = new DatagramPacket(buf, buf.length);
+            debugWriteToFile("about to receive len msg on port " + port);
             tryReceiveMessage(packet, ds, "Did not receive data. Terminating.");
-            String lenString = new String(packet.getData());
+            byte[] packetData = cleanPacketData(packet);
+            String lenString = new String(packetData);
             System.out.println(lenString);
+            debugWriteToFile(Arrays.toString(packetData));
 
             // Store length; init StringBuilder.
             // TODO: Convert len to bytes.
-            int len = Integer.parseInt(lenString.split(":")[1]);
+            String[] lenStringSplit = lenString.split(":");
+            String lenStringNew = lenStringSplit[1];
+            int len = Integer.parseInt(lenStringNew);
             StringBuilder sb = new StringBuilder();
             String dataString;
 
@@ -156,9 +173,10 @@ public class snw_transport implements IProtocol {
                 buf = getNewBuf();
                 packet = new DatagramPacket(buf, buf.length);
                 tryReceiveMessage(packet, ds, "Data transmission terminated prematurely.");
+                packetData = cleanPacketData(packet);
 
                 // Store data.
-                dataString = new String(packet.getData());
+                dataString = new String(packetData);
                 sb.append(dataString);
                 sb.append(System.lineSeparator());
 
@@ -166,12 +184,28 @@ public class snw_transport implements IProtocol {
                 sendString(ds, "ACK");
             }
             sendString(ds, "FIN");
+            writeToFileNoNewLine(sb.toString(), path);
         }
+    }
+
+    @Override
+    public int getConnectionPort() {
+        return connectionPort;
+    }
+
+    @Override
+    public void setConnectionPort(int connectionPort) {
+        this.connectionPort = connectionPort;
+    }
+
+    @Override
+    public int getPort() {
+        return port;
     }
 
     private void sendString(DatagramSocket socket, String s) throws Exception {
         byte[] ackMsgBytes = s.getBytes();
-        DatagramPacket p = new DatagramPacket(ackMsgBytes, ackMsgBytes.length, ip, port);
+        DatagramPacket p = new DatagramPacket(ackMsgBytes, ackMsgBytes.length, ip, connectionPort);
         socket.send(p);
     }
 

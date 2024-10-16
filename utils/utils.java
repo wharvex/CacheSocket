@@ -5,6 +5,7 @@ import snw.snw_transport;
 import tcp.tcp_transport;
 
 import java.io.*;
+import java.net.DatagramPacket;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -113,7 +114,7 @@ public class utils {
         }
     }
 
-    public static void newClientBehaviorGet(String ip, int port, String outFilePathNewBase, Command cmd, boolean isSNW) throws Exception {
+    public static void newClientBehaviorGet(String ip, int port, String outFilePathNewBase, Command cmd, boolean isSNW, boolean isFromClient) throws Exception {
         // "Try with resources" -- Objects created in the parens get "disposed" after control flow is done with the
         // curly-brace block.
         try (
@@ -129,7 +130,9 @@ public class utils {
             Path outFilePath = switchPathBase(cmdArgPath, outFilePathNewBase);
 
             // Get file.
-            IProtocol transportProtocol = isSNW ? new snw_transport(ip, port) : new tcp_transport(pwOutToSock, brInFromSock);
+            debugWriteToFile("About to create transportProtocol with port " + port);
+            IProtocol transportProtocol = isSNW ? new snw_transport(ip, BehaviorType.CLIENT_GET.port) : new tcp_transport(pwOutToSock, brInFromSock);
+            transportProtocol.setConnectionPort(isFromClient ? BehaviorType.SERVER_CACHE.port : BehaviorType.SERVER_SERVER.port);
             transportProtocol.receiveFile(outFilePath);
 
             // Get feedback.
@@ -140,7 +143,7 @@ public class utils {
         }
     }
 
-    public static void clientBehaviorPut(String serverIp, int serverPort, Command cmd) throws Exception {
+    public static void clientBehaviorPut(String serverIp, int serverPort, Command cmd, boolean isSNW) throws Exception {
         try (
                 Socket sock = new Socket(serverIp, serverPort);
                 PrintWriter pwOutToSock = new PrintWriter(sock.getOutputStream(), true);
@@ -151,7 +154,9 @@ public class utils {
 
             // Get path and send file.
             Path cmdArgPath = convertStringToPath(cmd.cmdArg);
-            IProtocol transportProtocol = new tcp_transport(pwOutToSock, brInFromSock);
+            debugWriteToFile("about to create transportProtocol on port " + serverPort);
+            IProtocol transportProtocol = isSNW ? new snw_transport(serverIp, BehaviorType.CLIENT_PUT.port) : new tcp_transport(pwOutToSock, brInFromSock);
+            transportProtocol.setConnectionPort(BehaviorType.SERVER_SERVER.port);
             debugWriteToFile("clientBehaviorPut sending file");
             transportProtocol.sendFile(cmdArgPath);
 
@@ -188,7 +193,7 @@ public class utils {
                         var newArg = switchPathBase(cmdArgPath, "server_fl").toString();
                         debugWriteToFile("new arg: " + newArg);
                         var newCmd = new Command(cmd, newArg);
-                        newClientBehaviorGet(serverIp, serverPort, "cache_fl", newCmd, isSNW);
+                        newClientBehaviorGet(serverIp, serverPort, "cache_fl", newCmd, isSNW, false);
                         fileOrigin = "server";
                     } else {
                         fileOrigin = "cache";
@@ -196,7 +201,8 @@ public class utils {
 
                     // Send file.
                     // TODO: Add cache IP to newServerBehaviorCache's params.
-                    IProtocol transportProtocol = isSNW ? new snw_transport("localhost", cachePort) : new tcp_transport(outToSocket, inFromSocket);
+                    IProtocol transportProtocol = isSNW ? new snw_transport("localhost", BehaviorType.SERVER_CACHE.port) : new tcp_transport(outToSocket, inFromSocket);
+                    transportProtocol.setConnectionPort(BehaviorType.CLIENT_GET.port);
                     debugWriteToFile("serverBehaviorCache sending file on port " + cachePort);
                     transportProtocol.sendFile(cmdArgPath);
 
@@ -227,9 +233,11 @@ public class utils {
 
                     // Create transport protocol and proceed according to command type.
                     // TODO: Figure out how to get server's ip address here.
-                    IProtocol transportProtocol = isSNW ? new snw_transport("localhost", serverPort) : new tcp_transport(outToSocket, inFromSocket);
+                    debugWriteToFile("about to create transportProtocol on port " + serverPort);
+                    IProtocol transportProtocol = isSNW ? new snw_transport("localhost", BehaviorType.SERVER_SERVER.port) : new tcp_transport(outToSocket, inFromSocket);
                     switch (cmd.cmdType) {
                         case "get":
+                            transportProtocol.setConnectionPort(BehaviorType.SERVER_CACHE.port);
                             File f = new File(cmd.cmdArg);
                             if (!f.exists()) {
                                 debugWriteToFile("server didn't find the file");
@@ -242,6 +250,7 @@ public class utils {
                             }
                             break;
                         case "put":
+                            transportProtocol.setConnectionPort(BehaviorType.CLIENT_PUT.port);
                             var newArg = switchPathBase(cmdArgPath, "server_fl").toString();
                             debugWriteToFile("server created new cmd arg: " + newArg);
                             var newCmdArgPath = convertStringToPath(newArg);
@@ -298,5 +307,20 @@ public class utils {
                 return new Command(cmdLine);
             }
         }
+    }
+
+    public static byte[] cleanPacketData(DatagramPacket packet) {
+        byte[] rawData = packet.getData();
+        int packetDataLenWithoutZeros = 0;
+        byte b = -1;
+        while (b != 0 && packetDataLenWithoutZeros < rawData.length) {
+            b = packet.getData()[packetDataLenWithoutZeros++];
+        }
+        byte[] cleanData = new byte[packetDataLenWithoutZeros - 1];
+        for (int i = 0; i < packetDataLenWithoutZeros - 1; i++) {
+            debugWriteToFile("raw data " + i + ": " + rawData[i]);
+            cleanData[i] = rawData[i];
+        }
+        return cleanData;
     }
 }

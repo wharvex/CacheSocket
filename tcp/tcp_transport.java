@@ -45,4 +45,19 @@ public class tcp_transport implements IProtocol {
             writeToFile(ln, path);
         }
     }
+
+    @Override
+    public int getConnectionPort() {
+        return 0;
+    }
+
+    @Override
+    public void setConnectionPort(int connectionPort) {
+
+    }
+
+    @Override
+    public int getPort() {
+        return 0;
+    }
 }

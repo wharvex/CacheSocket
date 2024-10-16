@@ -46,10 +46,10 @@ public class client {
             // Proceed according to the command type.
             switch (cmd.cmdType.toLowerCase()) {
                 case "get":
-                    newClientBehaviorGet(cacheIP, cachePort, "client_fl", cmd, transportProtocolString.equalsIgnoreCase("snw"));
+                    newClientBehaviorGet(cacheIP, cachePort, "client_fl", cmd, transportProtocolString.equalsIgnoreCase("snw"), true);
                     break;
                 case "put":
-                    clientBehaviorPut(serverIP, serverPort, cmd);
+                    clientBehaviorPut(serverIP, serverPort, cmd, transportProtocolString.equalsIgnoreCase("snw"));
                     break;
                 case "quit":
                     System.out.println("Exiting program!");
