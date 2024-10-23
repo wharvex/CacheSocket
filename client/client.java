@@ -38,28 +38,28 @@ public class client {
             // Get the first word.
             String splitLine[] = currentLine.split(" ", 2);
             String cmdType = splitLine[0];
-
-            // Testing
-            String currentPath = new java.io.File(".").getCanonicalPath();
-            System.out.println("current path: " + currentPath);
+            String cmdArg = splitLine[1];
 
             // Proceed according to the command type.
             switch (cmdType) {
             case "get":
-                System.out.println("get");
-                BufferedReader inFromUser = new BufferedReader(
-                    new InputStreamReader(System.in));
+                // Announce operation.
+                System.out.println("GET file: " + cmdArg);
+
+                // Setup socket and streams.
                 Socket clientSocket = new Socket(cacheIP, cachePort);
-                DataOutputStream toServer = new DataOutputStream(
-                    clientSocket.getOutputStream());
-                BufferedReader fromServer =
-                new BufferedReader(new InputStreamReader(
-                                       clientSocket.getInputStream()));
-                sentence = fromUser.readLine();
-                outToServer.writeBytes(sentence + '\n');
-                modifiedSentence = inFromServer.readLine();
-                System.out.println("FROM SERVER: " +
-                                   modifiedSentence);
+                DataOutputStream toCache = new DataOutputStream(clientSocket.getOutputStream());
+                BufferedReader fromCache = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+
+                // Send lines to Cache with command type and argument.
+                toCache.writeBytes("GET" + '\n');
+                toCache.writeBytes(cmdArg + '\n');
+
+                // Receive announcement line from Cache and display it.
+                String cacheAnnouncement = fromCache.readLine();
+                System.out.println(cacheAnnouncement);
+
+                // https://stackoverflow.com/a/17623638
                 clientSocket.close();
                 break;
             case "put":
