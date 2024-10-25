@@ -20,13 +20,14 @@ public class cache {
         int serverPort = tryParsePort(args[2]);
         String transportProtocol = args[3];
 
-        ServerSocket welcomeSocket = new ServerSocket(cachePort);
+        ServerSocket listenSocket = new ServerSocket(cachePort);
         while(true) {
-            Socket connectionSocket = welcomeSocket.accept();
-            BufferedReader fromClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
-            DataOutputStream toClient = new DataOutputStream(connectionSocket.getOutputStream());
-            String clientHeader = fromClient.readLine();
-            toClient.writeBytes("blah");
+            Socket connectionSocket = listenSocket.accept();
+            BufferedReader brClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
+            DataOutputStream dosClient = new DataOutputStream(connectionSocket.getOutputStream());
+            String clientHeader = brClient.readLine();
+            System.out.println("cache says: client header: " + clientHeader);
+            dosClient.writeBytes("blah\n");
         }
 
         // System.out.println(port + transportProtocol);
