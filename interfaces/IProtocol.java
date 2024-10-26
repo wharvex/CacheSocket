@@ -3,7 +3,7 @@ package interfaces;
 import java.io.IOException;
 
 public interface IProtocol {
-    void serverBehavior();
+    void serverBehaviorCache();
 
-    void clientBehaviorGet() throws IOException;
+    void clientBehaviorGet(String cmdArg) throws IOException;
 }

@@ -23,7 +23,7 @@ public class client {
         int serverPort = tryParsePort(args[1]);
         String cacheIP = args[2];
         int cachePort = tryParsePort(args[3]);
-        String transportProtocol = args[4];
+        String transportProtocolString = args[4];
 
 
         // Accept/process user commands.
@@ -43,12 +43,12 @@ public class client {
             if (cmdArg.isEmpty() && !cmdType.equalsIgnoreCase("quit"))
                 throw new IllegalArgumentException("Bad user command");
 
-            IProtocol tcpProtocol = new tcp_transport(serverPort, cachePort, serverIP, cacheIP, cmdArg);
+            IProtocol transportProtocol = new tcp_transport(serverPort, cachePort, serverIP, cacheIP);
             // Proceed according to the command type.
             Path path;
             switch (cmdType.toLowerCase()) {
                 case "get":
-                    tcpProtocol.clientBehaviorGet();
+                    transportProtocol.clientBehaviorGet(cmdArg);
                     break;
                 case "put":
                     System.out.println("put");

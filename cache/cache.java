@@ -1,12 +1,9 @@
 package cache;
 
-import java.io.*;
-import java.net.*;
+import interfaces.IProtocol;
 import tcp.tcp_transport;
-import java.util.Scanner;
+
 import static utils.utils.tryParsePort;
-import java.nio.file.*;
-import java.nio.charset.*;
 
 public class cache {
     public static void main(String[] args) throws Exception {
@@ -18,17 +15,10 @@ public class cache {
         int cachePort = tryParsePort(args[0]);
         String serverIP = args[1];
         int serverPort = tryParsePort(args[2]);
-        String transportProtocol = args[3];
+        String transportProtocolString = args[3];
 
-        ServerSocket listenSocket = new ServerSocket(cachePort);
-        while(true) {
-            Socket connectionSocket = listenSocket.accept();
-            BufferedReader brClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
-            DataOutputStream dosClient = new DataOutputStream(connectionSocket.getOutputStream());
-            String clientHeader = brClient.readLine();
-            System.out.println("cache says: client header: " + clientHeader);
-            dosClient.writeBytes("blah\n");
-        }
+        IProtocol transportProtocol = new tcp_transport(serverPort, cachePort, serverIP);
+        transportProtocol.serverBehaviorCache();
 
         // System.out.println(port + transportProtocol);
         // String clientSentence;
