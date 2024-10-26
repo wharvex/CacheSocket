@@ -10,10 +10,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Scanner;
 
+import static utils.utils.debugWriteToFile;
 import static utils.utils.tryParsePort;
 
 public class client {
     public static void main(String[] args) throws Exception {
+        debugWriteToFile("Client starting");
+        System.out.println(Path.of(System.getProperty("java.io.tmpdir"), "networking_debug_output.txt"));
         // Validate/store command line args.
         // args: server IP, server port, cache IP, cache port, protocol
         if (args.length != 5) {
