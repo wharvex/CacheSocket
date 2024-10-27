@@ -169,12 +169,61 @@ public class utils {
                         debugWriteToFile("cache getting file from server");
                         var t = switchPathBase(cmdArgPath, "server_fl").toString();
                         newClientBehaviorGet(serverIp, serverPort, "cache_fl", cmd);
+                        debugWriteToFile("cache printing feedback to client-cache socket");
                         outToSocket.println("Server response: File delivered from server.");
                     } else {
+                        debugWriteToFile("cache printing feedback to client-cache socket");
                         outToSocket.println("Server response: File delivered from cache.");
                     }
 
-                    debugWriteToFile("cache printing announcement to client-cache socket");
+
+                    try (
+                            Stream<String> stream = Files.lines(cmdArgPath)
+                    ) {
+                        stream.forEach(outToSocket::println);
+                        outToSocket.println("file over");
+                    }
+                }
+            }
+        }
+    }
+
+    public static void serverBehaviorServer(int serverPort) throws Exception {
+        try (
+                ServerSocket listenSocket = new ServerSocket(serverPort)
+        ) {
+            while (true) {
+                try (
+                        Socket connectionSocket = listenSocket.accept();
+                        PrintWriter outToSocket = new PrintWriter(connectionSocket.getOutputStream(), true);
+                        BufferedReader inFromSocket = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()))
+                ) {
+                    // Get command line, create Command object, create Path from cmdArg.
+                    debugWriteToFile("server about to read command from socket");
+                    String cmdLine = inFromSocket.readLine();
+                    debugWriteToFile("server received command line from socket:\n" + cmdLine);
+                    Command cmd = new Command(cmdLine);
+                    Path cmdArgPath = convertStringToPath(cmd.cmdArg);
+                    File f = new File(cmd.cmdArg);
+                    switch (cmd.cmdType) {
+                        case "get":
+                            break;
+                        case "put":
+                            break;
+                        default:
+                            throw new Exception("Impossible!");
+                    }
+                    if (!f.exists()) {
+                        debugWriteToFile("cache getting file from server");
+                        var t = switchPathBase(cmdArgPath, "server_fl").toString();
+//                        newClientBehaviorGet(serverIp, serverPort, "cache_fl", cmd);
+                        debugWriteToFile("cache printing feedback to client-cache socket");
+                        outToSocket.println("Server response: File delivered from server.");
+                    } else {
+                        debugWriteToFile("cache printing feedback to client-cache socket");
+                        outToSocket.println("Server response: File delivered from cache.");
+                    }
+
 
                     try (
                             Stream<String> stream = Files.lines(cmdArgPath)

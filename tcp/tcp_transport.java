@@ -2,8 +2,13 @@ package tcp;
 
 import interfaces.IProtocol;
 
+import java.io.PrintWriter;
+
 public class tcp_transport implements IProtocol {
-    public tcp_transport() {
+    PrintWriter pw;
+
+    public tcp_transport(PrintWriter pw) {
+        this.pw = pw;
     }
 
     @Override
