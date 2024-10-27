@@ -10,8 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Scanner;
 
-import static utils.utils.debugWriteToFile;
-import static utils.utils.tryParsePort;
+import static utils.utils.*;
 
 public class client {
     public static void main(String[] args) throws Exception {
@@ -46,7 +45,12 @@ public class client {
             if (cmdArg.isEmpty() && !cmdType.equalsIgnoreCase("quit"))
                 throw new IllegalArgumentException("Bad user command");
 
+            // Display "awaiting" message.
+            if (cmdType.equalsIgnoreCase("get") || cmdType.equalsIgnoreCase("put"))
+                System.out.println("Awaiting server response.");
+
             IProtocol transportProtocol = new tcp_transport(serverPort, cachePort, serverIP, cacheIP);
+            debugWriteToFile("File 1 line count (read 1): " + getFile1LineCount());
             // Proceed according to the command type.
             Path path;
             switch (cmdType.toLowerCase()) {
@@ -54,6 +58,7 @@ public class client {
                     transportProtocol.clientBehaviorGet(cmdArg);
                     break;
                 case "put":
+                    System.out.println("Awaiting server response.");
                     System.out.println("put");
                     path = FileSystems.getDefault().getPath("client_fl", cmdArg);
                     BufferedReader reader = Files.newBufferedReader(path,
