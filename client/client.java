@@ -1,7 +1,5 @@
 package client;
 
-import interfaces.IProtocol;
-import tcp.tcp_transport;
 import utils.Command;
 
 import java.io.BufferedReader;
@@ -48,8 +46,6 @@ public class client {
             if (cmd.cmdType.equalsIgnoreCase("get") || cmd.cmdType.equalsIgnoreCase("put"))
                 System.out.println("Awaiting server response.");
 
-            IProtocol transportProtocol = new tcp_transport(serverPort, cachePort, serverIP, cacheIP);
-            debugWriteToFile("File 1 line count (read 1): " + getFile1LineCount());
             // Proceed according to the command type.
             Path path;
             switch (cmd.cmdType.toLowerCase()) {

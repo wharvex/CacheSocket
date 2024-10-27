@@ -1,8 +1,5 @@
 package cache;
 
-import interfaces.IProtocol;
-import tcp.tcp_transport;
-
 import static utils.utils.newServerBehaviorCache;
 import static utils.utils.tryParsePort;
 
@@ -18,26 +15,6 @@ public class cache {
         int serverPort = tryParsePort(args[2]);
         String transportProtocolString = args[3];
 
-        IProtocol transportProtocol = new tcp_transport(serverPort, cachePort, serverIP);
-//        transportProtocol.serverBehaviorCache();
         newServerBehaviorCache(serverIP, cachePort, serverPort);
-
-        // System.out.println(port + transportProtocol);
-        // String clientSentence;
-        // String capitalizedSentence;
-        // ServerSocket welcomeSocket = new ServerSocket(port);
-        // while(true) {
-        //     Socket connectionSocket = welcomeSocket.accept();
-        //     BufferedReader inFromClient =
-        //         new BufferedReader(new InputStreamReader(
-        //                                connectionSocket.getInputStream()));
-        //     DataOutputStream outToClient =
-        //         new DataOutputStream(
-        //         connectionSocket.getOutputStream());
-        //     clientSentence = inFromClient.readLine();
-        //     capitalizedSentence =
-        //         clientSentence.toUpperCase() + '\n';
-        //     outToClient.writeBytes(capitalizedSentence);
-        // }
     }
 }
