@@ -1,5 +1,8 @@
 package utils;
 
+import interfaces.IProtocol;
+import tcp.tcp_transport;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -199,32 +202,31 @@ public class utils {
                         BufferedReader inFromSocket = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()))
                 ) {
                     // Get command line, create Command object, create Path from cmdArg.
-                    debugWriteToFile("server about to read command from socket");
+                    debugWriteToFile("server about to read command line from socket");
                     String cmdLine = inFromSocket.readLine();
-                    debugWriteToFile("server received command line from socket:\n" + cmdLine);
+                    debugWriteToFile("server read command line from socket:\n" + cmdLine);
                     Command cmd = new Command(cmdLine);
                     Path cmdArgPath = convertStringToPath(cmd.cmdArg);
-                    File f = new File(cmd.cmdArg);
+
+                    // Create transport protocol and proceed according to command type.
+                    IProtocol transportProtocol = new tcp_transport(outToSocket);
                     switch (cmd.cmdType) {
                         case "get":
+                            File f = new File(cmd.cmdArg);
+                            if (!f.exists()) {
+                                debugWriteToFile("server didn't find the file");
+                                outToSocket.println("Server response: File not found.");
+                            } else {
+                                debugWriteToFile("cache printing feedback to client-cache socket");
+                                outToSocket.println("Server response: File delivered from cache.");
+                                transportProtocol.sendFile(cmdArgPath);
+                            }
                             break;
                         case "put":
                             break;
                         default:
                             throw new Exception("Impossible!");
                     }
-                    if (!f.exists()) {
-                        debugWriteToFile("cache getting file from server");
-                        var t = switchPathBase(cmdArgPath, "server_fl").toString();
-//                        newClientBehaviorGet(serverIp, serverPort, "cache_fl", cmd);
-                        debugWriteToFile("cache printing feedback to client-cache socket");
-                        outToSocket.println("Server response: File delivered from server.");
-                    } else {
-                        debugWriteToFile("cache printing feedback to client-cache socket");
-                        outToSocket.println("Server response: File delivered from cache.");
-                    }
-
-
                     try (
                             Stream<String> stream = Files.lines(cmdArgPath)
                     ) {
