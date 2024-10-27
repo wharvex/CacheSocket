@@ -119,7 +119,7 @@ public class utils {
                 BufferedReader brInFromSock = new BufferedReader(new InputStreamReader(sock.getInputStream()))
         ) {
             // Send command.
-            pwOutToSock.println(cmd.cmdArg);
+            pwOutToSock.println(cmd.cmdLine);
 
             Path cmdArgPath = convertStringToPath(cmd.cmdArg);
             Path outFilePath = switchPathBase(cmdArgPath, outFilePathNewBase);
@@ -146,7 +146,7 @@ public class utils {
         }
     }
 
-    private void newServerBehaviorCache(String serverIp, int cachePort, int serverPort, String outFilePathNewBase) throws Exception {
+    public static void newServerBehaviorCache(String serverIp, int cachePort, int serverPort) throws Exception {
         try (
                 ServerSocket listenSocket = new ServerSocket(cachePort)
         ) {

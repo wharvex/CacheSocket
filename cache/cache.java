@@ -3,6 +3,7 @@ package cache;
 import interfaces.IProtocol;
 import tcp.tcp_transport;
 
+import static utils.utils.newServerBehaviorCache;
 import static utils.utils.tryParsePort;
 
 public class cache {
@@ -18,7 +19,8 @@ public class cache {
         String transportProtocolString = args[3];
 
         IProtocol transportProtocol = new tcp_transport(serverPort, cachePort, serverIP);
-        transportProtocol.serverBehaviorCache();
+//        transportProtocol.serverBehaviorCache();
+        newServerBehaviorCache(serverIP, cachePort, serverPort);
 
         // System.out.println(port + transportProtocol);
         // String clientSentence;
