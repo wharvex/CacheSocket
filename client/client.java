@@ -2,6 +2,7 @@ package client;
 
 import interfaces.IProtocol;
 import tcp.tcp_transport;
+import utils.Command;
 
 import java.io.BufferedReader;
 import java.nio.charset.StandardCharsets;
@@ -36,31 +37,29 @@ public class client {
             System.out.print("Enter command: ");
             currentLine = s.nextLine();
 
-            // Get the first word.
-            String[] splitLine = currentLine.split(" ", 2);
-            String cmdType = splitLine[0];
-
-            // Get second word; validate.
-            String cmdArg = splitLine.length > 1 ? splitLine[1] : "";
-            if (cmdArg.isEmpty() && !cmdType.equalsIgnoreCase("quit"))
-                throw new IllegalArgumentException("Bad user command");
+            // Create Command object and validate.
+            Command cmd = new Command(currentLine);
+            if (!cmd.isValid) {
+                System.out.println("Bad command.");
+                continue;
+            }
 
             // Display "awaiting" message.
-            if (cmdType.equalsIgnoreCase("get") || cmdType.equalsIgnoreCase("put"))
+            if (cmd.cmdType.equalsIgnoreCase("get") || cmd.cmdType.equalsIgnoreCase("put"))
                 System.out.println("Awaiting server response.");
 
             IProtocol transportProtocol = new tcp_transport(serverPort, cachePort, serverIP, cacheIP);
             debugWriteToFile("File 1 line count (read 1): " + getFile1LineCount());
             // Proceed according to the command type.
             Path path;
-            switch (cmdType.toLowerCase()) {
+            switch (cmd.cmdType.toLowerCase()) {
                 case "get":
-                    transportProtocol.clientBehaviorGet(cmdArg);
+                    newClientBehaviorGet(cacheIP, cachePort, "client_fl", cmd);
                     break;
                 case "put":
                     System.out.println("Awaiting server response.");
                     System.out.println("put");
-                    path = FileSystems.getDefault().getPath("client_fl", cmdArg);
+                    path = FileSystems.getDefault().getPath("client_fl", cmd.cmdArg);
                     BufferedReader reader = Files.newBufferedReader(path,
                             StandardCharsets.UTF_8);
                     break;

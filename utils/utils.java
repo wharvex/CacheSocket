@@ -3,7 +3,6 @@ package utils;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -83,6 +82,7 @@ public class utils {
     }
 
     public static void sanityCheck() throws Exception {
+        // https://stackoverflow.com/a/4716623/16458003
         int i = 0;
         try (BufferedReader br = new BufferedReader(new FileReader("cache_fl/File1.txt"))) {
             StringBuilder sb = new StringBuilder();
@@ -110,87 +110,80 @@ public class utils {
         }
     }
 
-    private void newServerBehaviorCache(String ip, int cachePort, int serverPort, String outFilePathNewBase) throws Exception {
-        try (
-                ServerSocket listenSocket = new ServerSocket(cachePort)
-        ) {
-            while (true) {
-                // Accept connection and setup I/O streams.
-                Socket connectionSocket = listenSocket.accept();
-                PrintWriter outToSocket = new PrintWriter(connectionSocket.getOutputStream(), true);
-                BufferedReader inFromSocket = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
-
-                debugWriteToFile("cache about to read from cache-client socket");
-                String cmdArg = inFromSocket.readLine();
-                debugWriteToFile("cache received line from client-cache socket:\n" + cmdArg);
-                Path cmdArgPath = FileSystems.getDefault().getPath(cmdArg);
-                File f = new File(cmdArg);
-                if (!f.exists()) {
-                    debugWriteToFile("cache getting file from server");
-//                    clientBehaviorGet(switchPathBase(cmdArgPath, "server_fl").toString());
-                    outToSocket.println("Server response: File delivered from server.");
-                } else {
-                    outToSocket.println("Server response: File delivered from cache.");
-                }
-
-                debugWriteToFile("cache printing announcement to client-cache socket");
-
-                try (
-                        Stream<String> stream = Files.lines(cmdArgPath)
-                ) {
-                    stream.forEach(outToSocket::println);
-                    outToSocket.println("file over");
-                }
-//                try (
-//                        BufferedReader brInFromFile = Files.newBufferedReader(cmdArgPath, StandardCharsets.UTF_8)
-//                ) {
-//                    String ln;
-//                    debugWriteToFile("File1 line count (read 2): " + brInFromFile.lines().count());
-//                    fancySanityCheck();
-//
-//                    while ((ln = brInFromFile.readLine()) != null) {
-//                        debugWriteToFile("cache printing file line to client-cache socket");
-//                        outToSocket.println(ln);
-//                    }
-//                    outToSocket.println("file over");
-//                }
-            }
-        }
-    }
-
-    public void clientBehaviorGet(String ip, int port, String outFilePathNewBase, String cmdArg) throws IOException {
+    public static void newClientBehaviorGet(String ip, int port, String outFilePathNewBase, Command cmd) throws Exception {
+        // "Try with resources" -- Objects created in the parens get "disposed" after control flow is done with the
+        // curly-brace block.
         try (
                 Socket sock = new Socket(ip, port);
                 PrintWriter pwOutToSock = new PrintWriter(sock.getOutputStream(), true);
                 BufferedReader brInFromSock = new BufferedReader(new InputStreamReader(sock.getInputStream()))
         ) {
-            pwOutToSock.println(cmdArg);
+            // Send command.
+            pwOutToSock.println(cmd.cmdArg);
 
-            Path cmdArgPath = FileSystems.getDefault().getPath(cmdArg);
+            Path cmdArgPath = convertStringToPath(cmd.cmdArg);
             Path outFilePath = switchPathBase(cmdArgPath, outFilePathNewBase);
             String ln;
             int i = 0;
-            debugWriteToFile("client about to read from sock br " + i);
+
+            // Get feedback.
+            debugWriteToFile("client-behaving party about to read feedback from sock br");
             ln = brInFromSock.readLine();
             System.out.println(ln);
-            debugWriteToFile("client receives line: " + ln);
+            debugWriteToFile("client-behaving party receives feedback line: " + ln);
+
+            // Get file.
             while (true) {
-//                waitTilReady(brInFromSock, "client behavior get");
-                debugWriteToFile("client about to read from sock br " + (++i));
+                debugWriteToFile("client-behaving party about to read from sock br " + (++i));
                 ln = brInFromSock.readLine();
-                debugWriteToFile("client receives line: " + ln);
+                debugWriteToFile("client-behaving party receives line: " + ln);
                 if (ln.equals("file over")) {
                     debugWriteToFile("file is over...");
                     break;
                 }
                 writeToFile(ln, outFilePath);
             }
-        } catch (UnknownHostException e) {
-            System.err.println("Unknown host: " + ip);
-            System.exit(1);
-        } catch (IOException e) {
-            System.err.println("I/O issue with host: " + ip);
-            System.exit(1);
+        }
+    }
+
+    private void newServerBehaviorCache(String serverIp, int cachePort, int serverPort, String outFilePathNewBase) throws Exception {
+        try (
+                ServerSocket listenSocket = new ServerSocket(cachePort)
+        ) {
+            while (true) {
+                try (
+                        Socket connectionSocket = listenSocket.accept();
+                        PrintWriter outToSocket = new PrintWriter(connectionSocket.getOutputStream(), true);
+                        BufferedReader inFromSocket = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()))
+                ) {
+                    // Get command line, create Command object, create Path from cmdArg.
+                    debugWriteToFile("cache about to read from cache-client socket");
+                    String cmdLine = inFromSocket.readLine();
+                    debugWriteToFile("cache received line from client-cache socket:\n" + cmdLine);
+                    Command cmd = new Command(cmdLine);
+                    Path cmdArgPath = convertStringToPath(cmd.cmdArg);
+
+                    // If the cache doesn't have the file, look in the server.
+                    File f = new File(cmd.cmdArg);
+                    if (!f.exists()) {
+                        debugWriteToFile("cache getting file from server");
+                        var t = switchPathBase(cmdArgPath, "server_fl").toString();
+                        newClientBehaviorGet(serverIp, serverPort, "cache_fl", cmd);
+                        outToSocket.println("Server response: File delivered from server.");
+                    } else {
+                        outToSocket.println("Server response: File delivered from cache.");
+                    }
+
+                    debugWriteToFile("cache printing announcement to client-cache socket");
+
+                    try (
+                            Stream<String> stream = Files.lines(cmdArgPath)
+                    ) {
+                        stream.forEach(outToSocket::println);
+                        outToSocket.println("file over");
+                    }
+                }
+            }
         }
     }
 }
