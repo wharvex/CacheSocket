@@ -129,12 +129,6 @@ public class utils {
             String ln;
             int i = 0;
 
-            // Get feedback.
-            debugWriteToFile("client-behaving party about to read feedback from sock br");
-            ln = brInFromSock.readLine();
-            System.out.println(ln);
-            debugWriteToFile("client-behaving party receives feedback line: " + ln);
-
             // Get file.
             while (true) {
                 debugWriteToFile("client-behaving party about to read from sock br " + (++i));
@@ -146,6 +140,12 @@ public class utils {
                 }
                 writeToFile(ln, outFilePath);
             }
+
+            // Get feedback.
+            debugWriteToFile("client-behaving party about to read feedback from sock br");
+            ln = brInFromSock.readLine();
+            System.out.println(ln);
+            debugWriteToFile("client-behaving party receives feedback line: " + ln);
         }
     }
 
@@ -168,17 +168,18 @@ public class utils {
 
                     // If the cache doesn't have the file, look in the server.
                     File f = new File(cmd.cmdArg);
+                    String fileOrigin;
                     if (!f.exists()) {
                         debugWriteToFile("cache getting file from server");
-                        var t = switchPathBase(cmdArgPath, "server_fl").toString();
-                        newClientBehaviorGet(serverIp, serverPort, "cache_fl", cmd);
+                        var newArg = switchPathBase(cmdArgPath, "server_fl").toString();
+                        var newCmd = new Command(cmd, newArg);
+                        newClientBehaviorGet(serverIp, serverPort, "cache_fl", newCmd);
                         debugWriteToFile("cache printing feedback to client-cache socket");
-                        outToSocket.println("Server response: File delivered from server.");
+                        fileOrigin = "server";
                     } else {
                         debugWriteToFile("cache printing feedback to client-cache socket");
-                        outToSocket.println("Server response: File delivered from cache.");
+                        fileOrigin = "cache";
                     }
-
 
                     try (
                             Stream<String> stream = Files.lines(cmdArgPath)
@@ -186,6 +187,7 @@ public class utils {
                         stream.forEach(outToSocket::println);
                         outToSocket.println("file over");
                     }
+                    outToSocket.println("Server response: File delivered from " + fileOrigin + ".");
                 }
             }
         }
