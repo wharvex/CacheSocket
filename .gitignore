@@ -1,2 +1,4 @@
 out/
-*/File*.txt
+client_fl/File*.txt
+cache_fl/File*.txt
+server_fl/File*.txt
