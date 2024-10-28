@@ -126,26 +126,26 @@ public class utils {
 
             Path cmdArgPath = convertStringToPath(cmd.cmdArg);
             Path outFilePath = switchPathBase(cmdArgPath, outFilePathNewBase);
-            String ln;
-            int i = 0;
+            IProtocol transportProtocol = new tcp_transport(brInFromSock);
+            transportProtocol.receiveFile(outFilePath);
 
             // Get file.
-            while (true) {
-                debugWriteToFile("client-behaving party about to read from sock br " + (++i));
-                ln = brInFromSock.readLine();
-                debugWriteToFile("client-behaving party receives line: " + ln);
-                if (ln.equals("file over")) {
-                    debugWriteToFile("file is over...");
-                    break;
-                }
-                writeToFile(ln, outFilePath);
-            }
+//            while (true) {
+//                debugWriteToFile("client-behaving party about to read from sock br " + (++i));
+//                ln = brInFromSock.readLine();
+//                debugWriteToFile("client-behaving party receives line: " + ln);
+//                if (ln.equals("file over")) {
+//                    debugWriteToFile("file is over...");
+//                    break;
+//                }
+//                writeToFile(ln, outFilePath);
+//            }
 
             // Get feedback.
             debugWriteToFile("client-behaving party about to read feedback from sock br");
-            ln = brInFromSock.readLine();
-            System.out.println(ln);
-            debugWriteToFile("client-behaving party receives feedback line: " + ln);
+            String feedback = brInFromSock.readLine();
+            System.out.println(feedback);
+            debugWriteToFile("client-behaving party read feedback line: " + feedback);
         }
     }
 
@@ -182,13 +182,6 @@ public class utils {
                     }
 
                     IProtocol transportProtocol = new tcp_transport(outToSocket);
-//
-//                    try (
-//                            Stream<String> stream = Files.lines(cmdArgPath)
-//                    ) {
-//                        stream.forEach(outToSocket::println);
-//                        outToSocket.println("file over");
-//                    }
                     transportProtocol.sendFile(cmdArgPath);
                     outToSocket.println("Server response: File delivered from " + fileOrigin + ".");
                 }
