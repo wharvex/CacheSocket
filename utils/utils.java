@@ -10,7 +10,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.stream.Stream;
 
 import static java.nio.file.StandardOpenOption.APPEND;
 import static java.nio.file.StandardOpenOption.CREATE;
@@ -174,15 +173,17 @@ public class utils {
                         var newArg = switchPathBase(cmdArgPath, "server_fl").toString();
                         var newCmd = new Command(cmd, newArg);
                         newClientBehaviorGet(serverIp, serverPort, "cache_fl", newCmd);
-                        debugWriteToFile("cache printing feedback to client-cache socket");
                         fileOrigin = "server";
                     } else {
-                        debugWriteToFile("cache printing feedback to client-cache socket");
                         fileOrigin = "cache";
                     }
 
+                    // Send file.
                     IProtocol transportProtocol = new tcp_transport(outToSocket);
                     transportProtocol.sendFile(cmdArgPath);
+
+                    // Send feedback.
+                    debugWriteToFile("cache printing feedback to client-cache socket");
                     outToSocket.println("Server response: File delivered from " + fileOrigin + ".");
                 }
             }
@@ -215,9 +216,9 @@ public class utils {
                                 debugWriteToFile("server didn't find the file");
                                 outToSocket.println("Server response: File not found.");
                             } else {
-                                debugWriteToFile("cache printing feedback to client-cache socket");
-                                outToSocket.println("Server response: File delivered from cache.");
                                 transportProtocol.sendFile(cmdArgPath);
+                                debugWriteToFile("cache printing feedback to client-cache socket");
+                                outToSocket.println("blah");
                             }
                             break;
                         case "put":
@@ -225,12 +226,12 @@ public class utils {
                         default:
                             throw new Exception("Impossible!");
                     }
-                    try (
-                            Stream<String> stream = Files.lines(cmdArgPath)
-                    ) {
-                        stream.forEach(outToSocket::println);
-                        outToSocket.println("file over");
-                    }
+//                    try (
+//                            Stream<String> stream = Files.lines(cmdArgPath)
+//                    ) {
+//                        stream.forEach(outToSocket::println);
+//                        outToSocket.println("file over");
+//                    }
                 }
             }
         }
