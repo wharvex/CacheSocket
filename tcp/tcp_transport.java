@@ -22,7 +22,6 @@ public class tcp_transport implements IProtocol {
             stream.forEach(pw::println);
             pw.println("file over");
         }
-
     }
 
     @Override

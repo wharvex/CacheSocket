@@ -181,12 +181,15 @@ public class utils {
                         fileOrigin = "cache";
                     }
 
-                    try (
-                            Stream<String> stream = Files.lines(cmdArgPath)
-                    ) {
-                        stream.forEach(outToSocket::println);
-                        outToSocket.println("file over");
-                    }
+                    IProtocol transportProtocol = new tcp_transport(outToSocket);
+//
+//                    try (
+//                            Stream<String> stream = Files.lines(cmdArgPath)
+//                    ) {
+//                        stream.forEach(outToSocket::println);
+//                        outToSocket.println("file over");
+//                    }
+                    transportProtocol.sendFile(cmdArgPath);
                     outToSocket.println("Server response: File delivered from " + fileOrigin + ".");
                 }
             }
